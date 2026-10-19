@@ -2,10 +2,11 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Habit Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Zeiterfassung</title>
   <style>
     :root {
+      color-scheme: dark;
       --bg: #0a0b10;
       --surface: #131620;
       --surface-2: #1b1f2d;
@@ -15,8 +16,8 @@
       --accent: #8b5cf6;
       --accent-2: #22d3ee;
       --success: #34d399;
+      --warn: #fbbf24;
       --danger: #f43f5e;
-      --water: #22d3ee;
       --radius: 18px;
     }
 
@@ -30,22 +31,23 @@
         var(--bg);
       color: var(--text);
       min-height: 100vh;
+      min-height: 100dvh;
       display: flex;
       justify-content: center;
-      padding: 56px 18px;
+      padding: 40px 16px;
       overflow-x: hidden;
     }
 
     .app {
       width: 100%;
-      max-width: 520px;
+      max-width: 560px;
       display: flex;
       flex-direction: column;
-      gap: 24px;
+      gap: 20px;
     }
 
     header h1 {
-      font-size: 2rem;
+      font-size: 1.9rem;
       font-weight: 700;
       letter-spacing: -0.02em;
       background: linear-gradient(120deg, #fff 30%, var(--accent-2));
@@ -54,22 +56,1140 @@
       color: transparent;
     }
 
-    header p {
-      color: var(--muted);
-      margin-top: 6px;
-      font-size: 0.95rem;
-    }
+    header p { color: var(--muted); margin-top: 6px; font-size: 0.95rem; }
 
     .card {
       background: linear-gradient(180deg, var(--surface), var(--surface-2));
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 22px;
+      padding: 20px;
       box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
     }
 
     .section-label {
-      font-size: 0.85rem;
+      font-size: 0.78rem;
       color: var(--muted);
       text-transform: uppercase;
-      letter-spacing:
+      letter-spacing: 0.08em;
+    }
+
+    .row-between {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* Uhr */
+    .clock-card { text-align: center; }
+    .clock-date { color: var(--muted); font-size: 0.95rem; margin-top: 6px; }
+    .clock-time {
+      font-size: 3rem;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.03em;
+      margin: 6px 0 4px;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+    .status-pill.working { color: var(--success); border-color: rgba(52, 211, 153, 0.35); }
+    .status-pill.working .status-dot { background: var(--success); box-shadow: 0 0 10px var(--success); animation: pulse 1.6s infinite; }
+    .status-pill.break { color: var(--warn); border-color: rgba(251, 191, 36, 0.35); }
+    .status-pill.break .status-dot { background: var(--warn); }
+    .status-pill.done { color: var(--accent-2); border-color: rgba(34, 211, 238, 0.3); }
+    .status-pill.done .status-dot { background: var(--accent-2); }
+
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+    /* Buttons */
+    .btn {
+      border: none;
+      border-radius: 12px;
+      padding: 12px 18px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      color: #fff;
+      font-family: inherit;
+      background: linear-gradient(135deg, var(--accent), #6366f1);
+      box-shadow: 0 6px 20px rgba(139, 92, 246, 0.35);
+      transition: transform 0.15s, filter 0.2s, opacity 0.2s;
+    }
+    .btn:hover:not(:disabled) { filter: brightness(1.08); }
+    .btn:active:not(:disabled) { transform: scale(0.98); }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
+
+    .btn-start { background: linear-gradient(135deg, #34d399, #10b981); box-shadow: 0 6px 20px rgba(52, 211, 153, 0.3); }
+    .btn-end { background: linear-gradient(135deg, #f43f5e, #e11d48); box-shadow: 0 6px 20px rgba(244, 63, 94, 0.3); }
+    .btn-pause { background: linear-gradient(135deg, #fbbf24, #f59e0b); box-shadow: 0 6px 20px rgba(251, 191, 36, 0.25); color: #1a1405; }
+
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      box-shadow: none;
+      padding: 8px 12px;
+      font-size: 0.8rem;
+      border-radius: 10px;
+    }
+    .btn-ghost:hover:not(:disabled) { color: var(--text); border-color: #353d55; filter: none; }
+    .btn-danger:hover:not(:disabled) { color: var(--danger); border-color: rgba(244, 63, 94, 0.4); background: rgba(244, 63, 94, 0.08); }
+
+    .action-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 18px;
+    }
+    .action-grid .btn { width: 100%; padding: 14px 8px; }
+
+    /* Formulare */
+    input {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      color: var(--text);
+      font-size: 1rem;
+      font-family: inherit;
+      outline: none;
+      min-width: 0;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    input::placeholder { color: #4b5263; }
+    input:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.2); }
+
+    label {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .field { display: flex; flex-direction: column; min-width: 0; }
+    .form-stack { display: flex; flex-direction: column; gap: 12px; margin-top: 14px; }
+    .row { display: flex; gap: 10px; align-items: center; }
+
+    .time-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .day-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+    }
+    .day-grid input { text-align: center; padding: 10px 4px; }
+    .day-grid label { text-align: center; }
+
+    .day-label { font-size: 0.85rem; color: var(--muted); margin-top: 8px; text-align: left; }
+
+    /* Ergebnisse */
+    .result-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .timer-box {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px 8px;
+      text-align: center;
+    }
+
+    .timer-value {
+      font-size: 1.15rem;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      margin-top: 4px;
+    }
+    .timer-value.accent { color: var(--accent-2); }
+    .timer-value.over { color: var(--warn); }
+    .timer-value.good { color: var(--success); }
+
+    .hint {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: 12px;
+      line-height: 1.4;
+    }
+
+    /* Hinweise */
+    .alert-list { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+
+    .alert {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      border-radius: 14px;
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      font-size: 0.9rem;
+      line-height: 1.45;
+    }
+    .alert-icon { font-size: 1.05rem; line-height: 1.3; }
+    .alert.info { border-color: rgba(34, 211, 238, 0.3); background: rgba(34, 211, 238, 0.05); }
+    .alert.warn { border-color: rgba(251, 191, 36, 0.35); background: rgba(251, 191, 36, 0.06); }
+    .alert.ok { border-color: rgba(52, 211, 153, 0.35); background: rgba(52, 211, 153, 0.06); }
+    .alert.danger { border-color: rgba(244, 63, 94, 0.4); background: rgba(244, 63, 94, 0.07); }
+
+    /* Listen */
+    .item-list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+
+    .item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px 14px;
+    }
+    .item-main { min-width: 0; flex: 1; }
+    .item-title {
+      font-weight: 600;
+      font-size: 0.95rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .item-sub { font-size: 0.78rem; color: var(--muted); margin-top: 3px; line-height: 1.45; }
+    .item-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+    .tag {
+      display: inline-block;
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(34, 211, 238, 0.35);
+      color: var(--accent-2);
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+    .tag.warn { color: var(--warn); border-color: rgba(251, 191, 36, 0.35); }
+
+    .empty {
+      text-align: center;
+      color: var(--muted);
+      padding: 20px 10px;
+      border: 1px dashed var(--border);
+      border-radius: 14px;
+      font-size: 0.9rem;
+      margin-top: 12px;
+    }
+
+    /* Statistik */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .stat {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px 8px;
+      text-align: center;
+    }
+    .stat-value { font-size: 1.1rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .stat-value.over { color: var(--warn); }
+    .stat-label { font-size: 0.7rem; color: var(--muted); margin-top: 4px; line-height: 1.3; }
+
+    .hidden { display: none !important; }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 24px;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 12px 18px;
+      border-radius: 14px;
+      font-size: 0.9rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s, transform 0.25s;
+      z-index: 100;
+      max-width: calc(100% - 32px);
+      text-align: center;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    @media (max-width: 480px) {
+      body { padding: 24px 12px; }
+      header h1 { font-size: 1.6rem; }
+      .card { padding: 16px; border-radius: 16px; }
+      .clock-time { font-size: 2.5rem; }
+      .timer-value { font-size: 1rem; }
+      .stat-grid { gap: 8px; }
+      .result-grid { gap: 8px; }
+      .action-grid { grid-template-columns: 1fr 1fr; }
+      .action-grid .btn-pause { grid-column: 1 / -1; }
+      .day-grid { gap: 4px; }
+      .day-grid input { font-size: 0.85rem; padding: 10px 2px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>Zeiterfassung</h1>
+      <p>Arbeitszeit erfassen, Pausen einhalten, Überstunden im Blick.</p>
+    </header>
+
+    <!-- Datum, Uhrzeit, Status -->
+    <section class="card clock-card">
+      <div class="section-label">Aktuelles Datum &amp; Uhrzeit</div>
+      <div class="clock-date" id="date">–</div>
+      <div class="clock-time" id="clock">--:--:--</div>
+      <span class="status-pill" id="status-pill">
+        <span class="status-dot"></span>
+        <span id="status-text">Nicht eingestempelt</span>
+      </span>
+    </section>
+
+    <!-- Tagesdatensatz -->
+    <section class="card">
+      <div class="row-between">
+        <span class="section-label">Tagesdatensatz</span>
+        <input type="date" id="day-date" style="width:auto; padding:8px 10px; font-size:0.85rem;">
+      </div>
+      <div class="day-label" id="day-label"></div>
+
+      <div class="time-grid">
+        <div class="field">
+          <label for="t-start">Startzeit</label>
+          <input type="time" id="t-start">
+        </div>
+        <div class="field">
+          <label for="t-end">Endezeit</label>
+          <input type="time" id="t-end">
+        </div>
+        <div class="field">
+          <label for="t-bstart">Pausenbeginn</label>
+          <input type="time" id="t-bstart">
+        </div>
+        <div class="field">
+          <label for="t-bend">Pausenende</label>
+          <input type="time" id="t-bend">
+        </div>
+      </div>
+
+      <div class="result-grid">
+        <div class="timer-box">
+          <div class="section-label">Gesamtarbeit</div>
+          <div class="timer-value accent" id="worked">0:00</div>
+        </div>
+        <div class="timer-box">
+          <div class="section-label">Pause</div>
+          <div class="timer-value" id="pause-val">0:00</div>
+        </div>
+        <div class="timer-box">
+          <div class="section-label">Saldo</div>
+          <div class="timer-value" id="balance">–</div>
+        </div>
+      </div>
+
+      <div class="action-grid">
+        <button class="btn btn-start" id="btn-start" type="button">Einstempeln</button>
+        <button class="btn btn-pause" id="btn-pause" type="button" disabled>Pause starten</button>
+        <button class="btn btn-end" id="btn-end" type="button" disabled>Ausstempeln</button>
+      </div>
+
+      <p class="hint">Stempeln gilt für den heutigen Tag. Alle Zeiten lassen sich jederzeit manuell korrigieren.</p>
+    </section>
+
+    <!-- Hinweise AZG -->
+    <section class="card">
+      <div class="section-label">Hinweise nach österreichischem AZG</div>
+      <div class="alert-list" id="alerts"></div>
+      <p class="hint">
+        Vereinfachte Darstellung: Ruhepause von mind. 30 min ab mehr als 6 h Arbeit, mind. 45 min ab mehr als 9 h Arbeit.
+        Die tägliche Höchstarbeitszeit beträgt 12 h. Maßgeblich sind das AZG (§ 11 und § 9) und der Kollektivvertrag.
+        Diese App ersetzt keine Rechtsberatung.
+      </p>
+    </section>
+
+    <!-- Arbeitszeitmodelle -->
+    <section class="card">
+      <div class="row-between">
+        <span class="section-label">Arbeitszeitmodelle</span>
+        <button class="btn btn-ghost" id="btn-toggle-model" type="button">+ Neues Modell</button>
+      </div>
+
+      <div class="form-stack hidden" id="model-form">
+        <div class="field">
+          <label for="model-name">Bezeichnung</label>
+          <input type="text" id="model-name" placeholder="z. B. Teilzeit 6 h" maxlength="40">
+        </div>
+        <div>
+          <label>Sollstunden pro Wochentag</label>
+          <div class="day-grid" id="model-days"></div>
+        </div>
+        <div class="row">
+          <button class="btn" id="btn-save-model" type="button" style="flex:1;">Modell speichern</button>
+          <button class="btn btn-ghost" id="btn-cancel-model" type="button" style="padding:12px 16px;">Abbrechen</button>
+        </div>
+      </div>
+
+      <div class="item-list" id="model-list"></div>
+    </section>
+
+    <!-- Auswertung & Datensätze -->
+    <section class="card">
+      <div class="section-label">Auswertung</div>
+      <div class="stat-grid">
+        <div class="stat">
+          <div class="stat-value" id="stat-today">0:00</div>
+          <div class="stat-label">Heute<br>gearbeitet</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" id="stat-week">0:00</div>
+          <div class="stat-label">Diese Woche<br>gearbeitet</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" id="stat-overtime">+0:00</div>
+          <div class="stat-label">Überstunden<br>gesamt</div>
+        </div>
+      </div>
+
+      <div class="section-label" style="margin-top:20px;">Datensätze</div>
+      <div class="item-list" id="log-list"></div>
+      <div class="empty hidden" id="log-empty">Noch keine Datensätze.</div>
+    </section>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ============================================================
+    // Konfiguration und Zustand
+    // ============================================================
+    const STORAGE_KEY = 'zeiterfassung-v3';
+    const WEEKDAYS = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+    const DEFAULT_HOURS = [8, 8, 8, 8, 8, 0, 0];
+    const MIN = 60000;
+    const HOUR = 3600000;
+
+    // days: { 'YYYY-MM-DD': { start, end, breakStart, breakEnd } } (Zeitstempel in ms oder null)
+    const state = { days: {}, models: [], activeModelId: null };
+    let selectedKey = null; // null = heute
+
+    let idCounter = Date.now();
+    const nextId = () => String(++idCounter);
+
+    // ============================================================
+    // Elemente
+    // ============================================================
+    const $ = (id) => document.getElementById(id);
+
+    const els = {
+      clock: $('clock'),
+      date: $('date'),
+      statusPill: $('status-pill'),
+      statusText: $('status-text'),
+      dayDate: $('day-date'),
+      dayLabel: $('day-label'),
+      tStart: $('t-start'),
+      tEnd: $('t-end'),
+      tBStart: $('t-bstart'),
+      tBEnd: $('t-bend'),
+      worked: $('worked'),
+      pauseVal: $('pause-val'),
+      balance: $('balance'),
+      btnStart: $('btn-start'),
+      btnPause: $('btn-pause'),
+      btnEnd: $('btn-end'),
+      alerts: $('alerts'),
+      modelToggle: $('btn-toggle-model'),
+      modelForm: $('model-form'),
+      modelName: $('model-name'),
+      modelDays: $('model-days'),
+      modelSave: $('btn-save-model'),
+      modelCancel: $('btn-cancel-model'),
+      modelList: $('model-list'),
+      statToday: $('stat-today'),
+      statWeek: $('stat-week'),
+      statOver: $('stat-overtime'),
+      logList: $('log-list'),
+      logEmpty: $('log-empty'),
+      toast: $('toast')
+    };
+
+    // ============================================================
+    // Hilfsfunktionen
+    // ============================================================
+    const pad = (n) => String(n).padStart(2, '0');
+
+    function dateKey(d = new Date()) {
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    }
+
+    const todayKey = () => dateKey();
+    const isToday = (k) => k === todayKey();
+    const getSelectedKey = () => selectedKey || todayKey();
+    const emptyRec = () => ({ start: null, end: null, breakStart: null, breakEnd: null });
+
+    function fmtHM(ms) {
+      const m = Math.max(0, Math.round(ms / MIN));
+      return `${Math.floor(m / 60)}:${pad(m % 60)}`;
+    }
+
+    function fmtSigned(ms) {
+      const m = Math.round(Math.abs(ms) / MIN);
+      return `${ms < 0 ? '-' : '+'}${Math.floor(m / 60)}:${pad(m % 60)}`;
+    }
+
+    function fmtTime(ts) {
+      if (!ts) return '';
+      const d = new Date(ts);
+      return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+
+    function fmtDateLong(k) {
+      const [y, m, d] = k.split('-').map(Number);
+      return new Date(y, m - 1, d).toLocaleDateString('de-AT', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' });
+    }
+
+    function fmtDateShort(k) {
+      const [y, m, d] = k.split('-').map(Number);
+      return new Date(y, m - 1, d).toLocaleDateString('de-AT', { weekday: 'short', day: '2-digit', month: '2-digit' });
+    }
+
+    // "HH:MM" am Datum k in einen Zeitstempel umwandeln
+    function parseTime(k, hhmm) {
+      const [h, min] = hhmm.split(':').map(Number);
+      const [y, mo, d] = k.split('-').map(Number);
+      return new Date(y, mo - 1, d, h, min, 0, 0).getTime();
+    }
+
+    function mondayKey() {
+      const d = new Date();
+      d.setHours(0, 0, 0, 0);
+      d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+      return dateKey(d);
+    }
+
+    function notify(msg) {
+      els.toast.textContent = msg;
+      els.toast.classList.add('show');
+      clearTimeout(notify._t);
+      notify._t = setTimeout(() => els.toast.classList.remove('show'), 2400);
+    }
+
+    // ============================================================
+    // Persistenz
+    // ============================================================
+    function save() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch (e) { /* Speicher nicht verfügbar, App läuft trotzdem */ }
+    }
+
+    function load() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+        const data = JSON.parse(raw);
+        state.days = (data.days && typeof data.days === 'object') ? data.days : {};
+        state.models = Array.isArray(data.models) ? data.models : [];
+        state.activeModelId = data.activeModelId || null;
+      } catch (e) {
+        notify('Gespeicherte Daten konnten nicht gelesen werden');
+      }
+    }
+
+    // ============================================================
+    // Berechnungen
+    // ============================================================
+    // Sollzeit eines Datums aus dem aktiven Modell, sonst 8 h Mo–Fr
+    function targetMs(k) {
+      const [y, mo, d] = k.split('-').map(Number);
+      const idx = (new Date(y, mo - 1, d).getDay() + 6) % 7;
+      const model = state.models.find(m => m.id === state.activeModelId);
+      const hours = model ? model.hours[idx] : DEFAULT_HOURS[idx];
+      return (hours || 0) * HOUR;
+    }
+
+    // Gesamtarbeit und Pause eines Datensatzes
+    function dayStats(rec, now = Date.now()) {
+      if (!rec || !rec.start) return { worked: 0, pause: 0 };
+      const end = rec.end ?? now;
+      const pause = rec.breakStart
+        ? Math.max(0, (rec.breakEnd ?? rec.end ?? now) - rec.breakStart)
+        : 0;
+      return { worked: Math.max(0, end - rec.start - pause), pause };
+    }
+
+    // Saldo eines Tages, null wenn der Tag nicht zählt (kein Start oder offen und nicht heute)
+    function dayBalance(k, now = Date.now()) {
+      const rec = state.days[k];
+      if (!rec || !rec.start) return null;
+      if (!rec.end && !isToday(k)) return null;
+      return dayStats(rec, now).worked - targetMs(k);
+    }
+
+    // Prüft einen Datensatz auf Widersprüche
+    function validateRec(r) {
+      if (!r.start && (r.end || r.breakStart || r.breakEnd)) return 'Bitte zuerst eine Startzeit setzen.';
+      if (r.end && r.end <= r.start) return 'Die Endezeit muss nach der Startzeit liegen.';
+      if (r.breakStart && r.breakStart < r.start) return 'Pausenbeginn liegt vor der Startzeit.';
+      if (r.breakEnd && !r.breakStart) return 'Pausenende ohne Pausenbeginn.';
+      if (r.breakStart && r.breakEnd && r.breakEnd <= r.breakStart) return 'Pausenende muss nach dem Pausenbeginn liegen.';
+      if (r.end && r.breakStart && (r.breakEnd ?? r.end) > r.end) return 'Die Pause endet nach Arbeitsende.';
+      return null;
+    }
+
+    // ============================================================
+    // Ein- und Ausstempeln (nur heute)
+    // ============================================================
+    function stampStart() {
+      const k = todayKey();
+      if (state.days[k] && state.days[k].start) return;
+      const rec = state.days[k] || emptyRec();
+      rec.start = Date.now();
+      state.days[k] = rec;
+      selectedKey = null;
+      save();
+      render();
+      notify('Eingestempelt');
+    }
+
+    function stampPause() {
+      const k = todayKey();
+      const rec = state.days[k];
+      if (!rec || !rec.start || rec.end) return;
+      const now = Date.now();
+      if (rec.breakStart && !rec.breakEnd) {
+        rec.breakEnd = now;
+        notify('Pause beendet');
+      } else if (!rec.breakStart) {
+        rec.breakStart = now;
+        notify('Pause gestartet');
+      } else {
+        return;
+      }
+      save();
+      render();
+    }
+
+    function stampEnd() {
+      const k = todayKey();
+      const rec = state.days[k];
+      if (!rec || !rec.start || rec.end) return;
+      const now = Date.now();
+      if (rec.breakStart && !rec.breakEnd) rec.breakEnd = now;
+      rec.end = now;
+      save();
+      render();
+      notify('Ausgestempelt');
+    }
+
+    // ============================================================
+    // Manuelle Korrektur der Zeiten
+    // ============================================================
+    function onTimeChange(field, value) {
+      const k = getSelectedKey();
+      const draft = { ...(state.days[k] || emptyRec()) };
+      draft[field] = value ? parseTime(k, value) : null;
+
+      const err = validateRec(draft);
+      if (err) {
+        notify(err);
+        renderEditorInputs(true);
+        return;
+      }
+
+      if (!draft.start && !draft.end && !draft.breakStart && !draft.breakEnd) {
+        delete state.days[k];
+      } else {
+        state.days[k] = draft;
+      }
+      save();
+      render();
+    }
+
+    function deleteDay(k) {
+      delete state.days[k];
+      if (selectedKey === k) selectedKey = null;
+      save();
+      render();
+      notify('Datensatz gelöscht');
+    }
+
+    function selectDay(k) {
+      selectedKey = isToday(k) ? null : k;
+      render();
+      els.dayDate.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    // ============================================================
+    // Arbeitszeitmodelle
+    // ============================================================
+    function buildModelDayInputs() {
+      els.modelDays.innerHTML = '';
+      WEEKDAYS.forEach((day, i) => {
+        const wrap = document.createElement('div');
+        wrap.className = 'field';
+
+        const lbl = document.createElement('label');
+        lbl.textContent = day;
+        lbl.htmlFor = `model-day-${i}`;
+        lbl.style.textAlign = 'center';
+
+        const inp = document.createElement('input');
+        inp.type = 'text';
+        inp.id = `model-day-${i}`;
+        inp.inputMode = 'decimal';
+        inp.placeholder = String(DEFAULT_HOURS[i]);
+        inp.style.textAlign = 'center';
+
+        wrap.append(lbl, inp);
+        els.modelDays.appendChild(wrap);
+      });
+    }
+
+    function saveModel() {
+      const name = els.modelName.value.trim();
+      if (!name) return notify('Bitte eine Bezeichnung eingeben');
+
+      const hours = [...els.modelDays.querySelectorAll('input')].map(inp => {
+        const v = parseFloat((inp.value || '0').replace(',', '.'));
+        return isNaN(v) ? 0 : Math.min(12, Math.max(0, v));
+      });
+      if (hours.every(h => h === 0)) return notify('Mindestens ein Tag mit Stunden');
+
+      const model = { id: nextId(), name, hours };
+      state.models.push(model);
+      state.activeModelId = model.id;
+      save();
+      closeModelForm();
+      render();
+      notify('Modell gespeichert und aktiviert');
+    }
+
+    function setActiveModel(id) {
+      state.activeModelId = id;
+      save();
+      render();
+    }
+
+    function deleteModel(id) {
+      state.models = state.models.filter(m => m.id !== id);
+      if (state.activeModelId === id) state.activeModelId = null;
+      save();
+      render();
+    }
+
+    function openModelForm() {
+      buildModelDayInputs();
+      els.modelForm.classList.remove('hidden');
+      els.modelName.focus();
+    }
+
+    function closeModelForm() {
+      els.modelForm.classList.add('hidden');
+      els.modelName.value = '';
+    }
+
+    // ============================================================
+    // Anzeige: Uhr
+    // ============================================================
+    function updateClock() {
+      const now = new Date();
+      els.clock.textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+      els.date.textContent = now.toLocaleDateString('de-AT', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+    }
+
+    // ============================================================
+    // Anzeige: Editor und Live-Werte
+    // ============================================================
+    function renderEditorInputs(force = false) {
+      const k = getSelectedKey();
+      const rec = state.days[k] || emptyRec();
+      const set = (el, val) => {
+        if (force || document.activeElement !== el) el.value = val;
+      };
+
+      set(els.dayDate, k);
+      set(els.tStart, fmtTime(rec.start));
+      set(els.tEnd, fmtTime(rec.end));
+      set(els.tBStart, fmtTime(rec.breakStart));
+      set(els.tBEnd, fmtTime(rec.breakEnd));
+      els.dayLabel.textContent = (isToday(k) ? 'Heute · ' : '') + fmtDateLong(k);
+    }
+
+    function buildAlerts(k, rec, worked, pause, now) {
+      const alerts = [];
+      const today = isToday(k);
+
+      if (!rec.start) {
+        alerts.push({
+          type: 'info', icon: 'ℹ',
+          text: today ? 'Stempel ein, sobald die Arbeit beginnt.' : 'An diesem Tag ist keine Arbeitszeit erfasst.'
+        });
+      } else {
+        const wMin = worked / MIN;
+        const pMin = pause / MIN;
+        const open = !rec.end;
+        const required = wMin > 540 ? 45 : wMin > 360 ? 30 : 0;
+
+        if (required > 0) {
+          if (pMin >= required) {
+            alerts.push({ type: 'ok', icon: '✓', text: `Ruhepause erfüllt (${Math.round(pMin)} min, mind. ${required} min).` });
+          } else if (open) {
+            alerts.push({ type: 'warn', icon: '⚠', text: `Ruhepause fällig: mind. ${required} min. Noch ${Math.ceil(required - pMin)} min.` });
+          } else {
+            alerts.push({ type: 'danger', icon: '⛔', text: `Ruhepause zu kurz: ${Math.round(pMin)} min statt mind. ${required} min.` });
+          }
+        } else {
+          const rest = 360 - wMin;
+          if (open && rest <= 30) {
+            alerts.push({ type: 'info', icon: '⏱', text: `In ${Math.max(0, Math.ceil(rest))} min ist eine Ruhepause von mind. 30 min fällig.` });
+          } else {
+            alerts.push({ type: 'ok', icon: '✓', text: 'Bis 6 h Arbeit ist keine Ruhepause vorgeschrieben.' });
+          }
+        }
+
+        const hWorked = wMin / 60;
+        if (hWorked >= 12) {
+          alerts.push({ type: 'danger', icon: '⛔', text: 'Die höchstzulässige Tagesarbeitszeit von 12 h ist erreicht.' });
+        } else if (hWorked >= 10) {
+          alerts.push({ type: 'warn', icon: '⚠', text: 'Über 10 h Arbeit. Die Höchstgrenze liegt bei 12 h.' });
+        }
+      }
+
+      const target = targetMs(k);
+      alerts.push({
+        type: 'ok', icon: '◷',
+        text: target > 0 ? `Sollzeit für diesen Tag: ${fmtHM(target)}.` : 'Laut Arbeitszeitmodell ist dieser Tag frei.'
+      });
+      return alerts;
+    }
+
+    function renderAlerts(alerts) {
+      els.alerts.innerHTML = '';
+      alerts.forEach(a => {
+        const div = document.createElement('div');
+        div.className = 'alert ' + a.type;
+
+        const icon = document.createElement('span');
+        icon.className = 'alert-icon';
+        icon.textContent = a.icon;
+
+        const text = document.createElement('span');
+        text.textContent = a.text;
+
+        div.append(icon, text);
+        els.alerts.appendChild(div);
+      });
+    }
+
+    function renderStats(now) {
+      const todayRec = state.days[todayKey()];
+      els.statToday.textContent = fmtHM(dayStats(todayRec, now).worked);
+
+      const monday = mondayKey();
+      let week = 0;
+      let over = 0;
+      Object.keys(state.days).forEach(k => {
+        if (k >= monday) week += dayStats(state.days[k], now).worked;
+        const b = dayBalance(k, now);
+        if (b !== null) over += b;
+      });
+      els.statWeek.textContent = fmtHM(week);
+      els.statOver.textContent = fmtSigned(over);
+      els.statOver.className = 'stat-value ' + (over > 0 ? 'over' : '');
+    }
+
+    // Wird jede Sekunde aufgerufen. Erstellt keine Listen neu.
+    function updateLive() {
+      const now = Date.now();
+      const k = getSelectedKey();
+      const today = isToday(k);
+      const rec = state.days[k] || emptyRec();
+      const { worked, pause } = dayStats(rec, now);
+      const target = targetMs(k);
+      const balance = rec.start ? worked - target : null;
+
+      els.worked.textContent = fmtHM(worked);
+      els.pauseVal.textContent = fmtHM(pause);
+      els.balance.textContent = balance === null ? '–' : fmtSigned(balance);
+      els.balance.className = 'timer-value ' + (balance === null ? '' : balance > 0 ? 'over' : 'good');
+
+      // Status
+      const onBreak = !!(rec.start && rec.breakStart && !rec.breakEnd && !rec.end);
+      let pillClass = 'status-pill';
+      let text = 'Nicht eingestempelt';
+
+      if (rec.start && !rec.end) {
+        pillClass += onBreak ? ' break' : ' working';
+        text = onBreak
+          ? `Pause seit ${fmtTime(rec.breakStart)}`
+          : `Eingestempelt seit ${fmtTime(rec.start)}`;
+        if (!today) text += ' · offen';
+      } else if (rec.start && rec.end) {
+        pillClass += ' done';
+        text = `Ausgestempelt um ${fmtTime(rec.end)}`;
+      } else if (!today) {
+        text = 'Kein Eintrag an diesem Tag';
+      }
+      els.statusPill.className = pillClass;
+      els.statusText.textContent = text;
+
+      // Buttons (Stempeln nur heute)
+      els.btnStart.disabled = !today || !!rec.start;
+      els.btnEnd.disabled = !today || !rec.start || !!rec.end;
+      els.btnPause.disabled = !today || !rec.start || !!rec.end || (!!rec.breakStart && !!rec.breakEnd);
+      els.btnPause.textContent = onBreak ? 'Pause beenden' : 'Pause starten';
+
+      renderAlerts(buildAlerts(k, rec, worked, pause, now));
+      renderStats(now);
+    }
+
+    // ============================================================
+    // Anzeige: Listen
+    // ============================================================
+    function renderModels() {
+      els.modelList.innerHTML = '';
+
+      // Standard-Regelung immer anzeigen
+      const defItem = document.createElement('div');
+      defItem.className = 'item';
+      const defMain = document.createElement('div');
+      defMain.className = 'item-main';
+      const defTitle = document.createElement('div');
+      defTitle.className = 'item-title';
+      defTitle.textContent = 'Vollzeit (Standard)';
+      if (!state.activeModelId) {
+        const tag = document.createElement('span');
+        tag.className = 'tag';
+        tag.textContent = 'aktiv';
+        defTitle.appendChild(tag);
+      }
+      const defSub = document.createElement('div');
+      defSub.className = 'item-sub';
+      defSub.textContent = WEEKDAYS.map((d, i) => `${d} ${DEFAULT_HOURS[i]} h`).join(' · ');
+      defMain.append(defTitle, defSub);
+      defItem.appendChild(defMain);
+      if (state.activeModelId) {
+        const act = document.createElement('div');
+        act.className = 'item-actions';
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn btn-ghost';
+        btn.textContent = 'Aktivieren';
+        btn.addEventListener('click', () => setActiveModel(null));
+        act.appendChild(btn);
+        defItem.appendChild(act);
+      }
+      els.modelList.appendChild(defItem);
+
+      state.models.forEach(model => {
+        const item = document.createElement('div');
+        item.className = 'item';
+
+        const main = document.createElement('div');
+        main.className = 'item-main';
+
+        const title = document.createElement('div');
+        title.className = 'item-title';
+        title.textContent = model.name;
+        if (model.id === state.activeModelId) {
+          const tag = document.createElement('span');
+          tag.className = 'tag';
+          tag.textContent = 'aktiv';
+          title.appendChild(tag);
+        }
+
+        const sub = document.createElement('div');
+        sub.className = 'item-sub';
+        sub.textContent = WEEKDAYS.map((d, i) => `${d} ${model.hours[i]} h`).join(' · ');
+        main.append(title, sub);
+
+        const actions = document.createElement('div');
+        actions.className = 'item-actions';
+        if (model.id !== state.activeModelId) {
+          const act = document.createElement('button');
+          act.type = 'button';
+          act.className = 'btn btn-ghost';
+          act.textContent = 'Aktivieren';
+          act.addEventListener('click', () => setActiveModel(model.id));
+          actions.appendChild(act);
+        }
+        const del = document.createElement('button');
+        del.type = 'button';
+        del.className = 'btn btn-ghost btn-danger';
+        del.textContent = 'Löschen';
+        del.addEventListener('click', () => deleteModel(model.id));
+        actions.appendChild(del);
+
+        item.append(main, actions);
+        els.modelList.appendChild(item);
+      });
+    }
+
+    function renderLog() {
+      const now = Date.now();
+      const keys = Object.keys(state.days)
+        .filter(k => state.days[k] && state.days[k].start)
+        .sort()
+        .reverse()
+        .slice(0, 31);
+
+      els.logList.innerHTML = '';
+      els.logEmpty.classList.toggle('hidden', keys.length > 0);
+
+      keys.forEach(k => {
+        const rec = state.days[k];
+        const { worked, pause } = dayStats(rec, now);
+        const open = !rec.end;
+
+        const item = document.createElement('div');
+        item.className = 'item';
+
+        const main = document.createElement('div');
+        main.className = 'item-main';
+
+        const title = document.createElement('div');
+        title.className = 'item-title';
+        title.textContent = fmtDateShort(k);
+        if (open) {
+          const tag = document.createElement('span');
+          tag.className = 'tag warn';
+          tag.textContent = 'offen';
+          title.appendChild(tag);
+        }
+
+        const sub = document.createElement('div');
+        sub.className = 'item-sub';
+        const pauseTxt = rec.breakStart
+          ? `${fmtTime(rec.breakStart)}–${rec.breakEnd ? fmtTime(rec.breakEnd) : 'läuft'}`
+          : '–';
+        sub.textContent =
+          `Start ${fmtTime(rec.start)} · Ende ${rec.end ? fmtTime(rec.end) : '–'} · ` +
+          `Pause ${pauseTxt} (${Math.round(pause / MIN)} min) · Gesamt ${fmtHM(worked)}`;
+
+        main.append(title, sub);
+
+        const actions = document.createElement('div');
+        actions.className = 'item-actions';
+
+        const edit = document.createElement('button');
+        edit.type = 'button';
+        edit.className = 'btn btn-ghost';
+        edit.textContent = 'Bearbeiten';
+        edit.addEventListener('click', () => selectDay(k));
+
+        const del = document.createElement('button');
+        del.type = 'button';
+        del.className = 'btn btn-ghost btn-danger';
+        del.textContent = '×';
+        del.setAttribute('aria-label', 'Datensatz löschen');
+        del.addEventListener('click', () => deleteDay(k));
+
+        actions.append(edit, del);
+        item.append(main, actions);
+        els.logList.appendChild(item);
+      });
+    }
+
+    function render() {
+      try {
+        renderEditorInputs();
+        renderModels();
+        renderLog();
+        updateLive();
+      } catch (err) {
+        notify('Anzeigefehler: ' + err.message);
+      }
+    }
+
+    // ============================================================
+    // Ereignisse
+    // ============================================================
+    function bindEvents() {
+      els.btnStart.addEventListener('click', stampStart);
+      els.btnPause.addEventListener('click', stampPause);
+      els.btnEnd.addEventListener('click', stampEnd);
+
+      els.dayDate.addEventListener('change', () => {
+        const v = els.dayDate.value;
+        selectedKey = (!v || v === todayKey()) ? null : v;
+        render();
+      });
+
+      els.tStart.addEventListener('change', (e) => onTimeChange('start', e.target.value));
+      els.tEnd.addEventListener('change', (e) => onTimeChange('end', e.target.value));
+      els.tBStart.addEventListener('change', (e) => onTimeChange('breakStart', e.target.value));
+      els.tBEnd.addEventListener('change', (e) => onTimeChange('breakEnd', e.target.value));
+
+      els.modelToggle.addEventListener('click', () => {
+        if (els.modelForm.classList.contains('hidden')) openModelForm();
+        else closeModelForm();
+      });
+      els.modelSave.addEventListener('click', saveModel);
+      els.modelCancel.addEventListener('click', closeModelForm);
+    }
+
+    // ============================================================
+    // Start
+    // ============================================================
+    window.addEventListener('error', (e) => notify('Fehler: ' + e.message));
+
+    function init() {
+      // Uhr zuerst starten, damit sie auch bei anderen Fehlern läuft
+      updateClock();
+
+      load();
+      buildModelDayInputs();
+      bindEvents();
+      render();
+
+      let lastToday = todayKey();
+      const tick = () => {
+        try {
+          updateClock();
+          if (todayKey() !== lastToday) {
+            lastToday = todayKey();
+            render();
+          } else {
+            updateLive();
+          }
+        } catch (err) {
+          notify('Fehler: ' + err.message);
+        }
+      };
+
+      setInterval(tick, 1000);
+    }
+
+    init();
+  </script>
+</body>
+</html>
